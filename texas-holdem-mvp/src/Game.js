@@ -9,13 +9,21 @@ function Game() {
     const [joined, setJoined] = useState(false);
     const [gameState, setGameState] = useState(null);
     const [messages, setMessages] = useState([]);
+    const [showRestartPrompt, setShowRestartPrompt] = useState(false);
+    const [requester, setRequester] = useState(null);
+
+    const requestStartGame = () => {
+        socket.emit('requestStartGame');
+    };
+
+    const respondStartGame = (accept) => {
+        socket.emit('respondStartGame', { accept });
+    };
 
     useEffect(() => {
         // Listen for connection
         socket.on('connect', () => {
             console.log('Connected to backend!', socket.id);
-
-            // Emit a test event (make sure your backend has a matching handler for 'test')
             socket.emit('test', { message: 'Hello from React' });
         });
 
@@ -29,7 +37,6 @@ function Game() {
         };
     }, []);
 
-
     useEffect(() => {
         // Listen for game state updates from the server
         socket.on('gameUpdate', state => {
@@ -38,16 +45,29 @@ function Game() {
         });
 
         socket.on('error', data => {
-            // Check if data and data.message exist before using them
             const errorMessage = data && data.message ? data.message : 'Unknown error';
             console.error('Error:', errorMessage);
             setMessages(prev => [...prev, errorMessage]);
         });
 
-        // Clean up on component unmount
+        socket.on('startGameRequest', (data) => {
+            setShowRestartPrompt(true);
+            setRequester(data.requester);
+        });
+
+        socket.on('restartVoteRecorded', (data) => {
+            if (!data || !data.playerId) {
+                console.warn("Received invalid restartVoteRecorded event:", data);
+                return;
+            }
+            console.log(`${data.playerId} voted to ${data.accept ? 'restart' : 'continue'}`);
+        });
+
         return () => {
             socket.off('gameUpdate');
             socket.off('error');
+            socket.off('startGameRequest');
+            socket.off('restartVoteRecorded');
         };
     }, []);
 
@@ -55,10 +75,6 @@ function Game() {
         if (!name.trim()) return;
         socket.emit('joinGame', { name });
         setJoined(true);
-    };
-
-    const startGame = () => {
-        socket.emit('startGame');
     };
 
     const dealFlop = () => {
@@ -92,11 +108,19 @@ function Game() {
                 </div>
             ) : (
                 <div>
-                    <button onClick={startGame}>Start Game</button>
+                    <button onClick={requestStartGame}>Request Start Game</button>
                     <button onClick={dealFlop}>Deal Flop</button>
                     <button onClick={dealTurn}>Deal Turn</button>
                     <button onClick={dealRiver}>Deal River</button>
                     <button onClick={showdown}>Showdown</button>
+                </div>
+            )}
+
+            {showRestartPrompt && (
+                <div>
+                    <p>Player {requester} wants to restart the game. Do you agree?</p>
+                    <button onClick={() => { respondStartGame(true); setShowRestartPrompt(false); }}>Yes</button>
+                    <button onClick={() => { respondStartGame(false); setShowRestartPrompt(false); }}>No</button>
                 </div>
             )}
 
