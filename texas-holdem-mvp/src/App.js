@@ -1,5 +1,6 @@
-import React from 'react';
-import Game from './Game';
+// test
+import React from "react";
+import Game from "./Game";
 
 function App() {
   return (
