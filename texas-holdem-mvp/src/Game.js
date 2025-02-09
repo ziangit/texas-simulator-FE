@@ -12,6 +12,15 @@ function Game() {
     const [showRestartPrompt, setShowRestartPrompt] = useState(false);
     const [requester, setRequester] = useState(null);
 
+    const [betAmount, setBetAmount] = useState(0);
+    const [playerId, setPlayerId] = useState(null);
+
+
+    const placeBet = (action, amount = 0) => {
+        socket.emit('bet', { action, amount });
+    };
+
+
     const requestStartGame = () => {
         socket.emit('requestStartGame');
     };
@@ -42,6 +51,7 @@ function Game() {
         socket.on('gameUpdate', state => {
             console.log('Game update:', state);
             setGameState(state);
+            setPlayerId(socket.id);
         });
 
         socket.on('error', data => {
@@ -113,6 +123,27 @@ function Game() {
                     <button onClick={dealTurn}>Deal Turn</button>
                     <button onClick={dealRiver}>Deal River</button>
                     <button onClick={showdown}>Showdown</button>
+
+                    {/* Betting Actions - Only show if it's the player's turn */}
+                    <div style={{ marginTop: '10px' }}>
+                        {gameState && gameState.currentTurn === playerId ? (
+                            <div>
+                                <h3>Your Turn: Choose an Action</h3>
+                                {gameState.stage !== 'pre-flop' && <button onClick={() => placeBet('check')}>Check</button>}
+                                <button onClick={() => placeBet('call')}>Call</button>
+                                <input
+                                    type="number"
+                                    value={betAmount}
+                                    onChange={(e) => setBetAmount(Number(e.target.value))}
+                                    placeholder="Enter raise amount"
+                                />
+                                <button onClick={() => placeBet('raise', betAmount)}>Raise</button>
+                                <button onClick={() => placeBet('fold')}>Fold</button>
+                            </div>
+                        ) : (
+                            <p>Waiting for other players to act...</p>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -127,7 +158,10 @@ function Game() {
             <div style={{ marginTop: '20px' }}>
                 <h2>Game State</h2>
                 {gameState ? (
-                    <pre>{JSON.stringify(gameState, null, 2)}</pre>
+                    <>
+                        <pre>{JSON.stringify(gameState, null, 2)}</pre>
+                        {gameState.winner && <h2>Winner: Player {gameState.winner} 🏆</h2>}
+                    </>
                 ) : (
                     <p>No game state available</p>
                 )}
@@ -143,6 +177,7 @@ function Game() {
             </div>
         </div>
     );
+
 }
 
 export default Game;
