@@ -1,0 +1,70 @@
+.game-container {
+  text-align: center;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+.join-container {
+  margin: 20px;
+}
+
+.game-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.player-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 10px;
+}
+
+.cards {
+  display: flex;
+  gap: 10px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #333;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.game-actions {
+  margin: 20px;
+}
+
+.game-actions button {
+  margin: 5px;
+  padding: 10px 15px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.game-actions button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.game-state,
+.messages {
+  text-align: left;
+  margin-top: 20px;
+  width: 60%;
+}
+
+.messages ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.messages li {
+  background: #f1f1f1;
+  margin: 5px;
+  padding: 10px;
+  border-radius: 5px;
+}
